@@ -20,6 +20,7 @@ model Guild {
 
     lastCountMemberId     String?
     lastCountTimestamp    DateTime @default(now())
+    highestCountMemberId  String?
     highestCountTimestamp DateTime @default(now())
 }
 

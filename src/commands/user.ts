@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, time } from 'discord.js';
 import { commands } from '.';
 import { prisma, timeSince } from '../util';
 import { scoreTypes } from '../events/count';
@@ -38,6 +38,15 @@ commands.push({
             return;
         }
 
+        const formatDate = (date: Date) => time(Math.floor(date.getTime() / 1000), 'R');
+
+        const description = [
+            `**Last count:** ${data.lastActiveCount}`,
+            formatDate(data.lastActiveTimestamp),
+            `**Highest count:**  ${data.highestValidCount}`,
+            formatDate(data.highestValidTimestamp),
+        ];
+
         const { scoreValid, scoreHighest, scoreMercy, scoreInvalid } = data;
         const breakdownTotal = scoreValid + scoreHighest + scoreMercy + scoreInvalid;
 
@@ -51,10 +60,6 @@ commands.push({
             [scoreTypes.mercied.label, formatScore(scoreMercy, scoreMercy, breakdownTotal)],
             [scoreTypes.invalid.label, formatScore(scoreInvalid, scoreInvalid, breakdownTotal)],
         ];
-        const footer = [
-            `Active ${timeSince(data.lastActiveTimestamp)} as ${data.lastActiveCount}`,
-            `Highest ${timeSince(data.highestValidTimestamp)} as ${data.highestValidCount}`,
-        ];
 
         const embed = baseEmbed
             .addFields(
@@ -64,9 +69,7 @@ commands.push({
                     inline: true,
                 })),
             )
-            .setFooter({
-                text: footer.join('\n'),
-            });
+            .setDescription(description.join('\n'));
 
         await interaction.reply({ embeds: [embed] });
     },

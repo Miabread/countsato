@@ -45,7 +45,13 @@ client.on(Events.MessageCreate, async (message) => {
             data: {
                 currentCount: count,
                 lastCountMemberId: memberId,
-                lastCountTimestamp: message.createdAt,
+                lastCountTimestamp: new Date(),
+
+                ...(count > guild.highestCount && {
+                    highestCount: count,
+                    highestCountMemberId: message.author.id,
+                    highestCountTimestamp: new Date(),
+                }),
             },
         });
     };
@@ -98,17 +104,6 @@ client.on(Events.MessageCreate, async (message) => {
         return await ruinCount('Wrong number!');
     }
 
-    updateCount(nextCount, message.author.id);
-
-    if (nextCount > guild.highestCount) {
-        await prisma.guild.update({
-            where: { id: guild.id },
-            data: {
-                highestCount: nextCount,
-            },
-        });
-        await updateScore('highest', nextCount);
-    } else {
-        await updateScore('valid', nextCount);
-    }
+    await updateCount(nextCount, message.author.id);
+    await updateScore(nextCount > guild.highestCount ? 'highest' : 'valid', nextCount);
 });
