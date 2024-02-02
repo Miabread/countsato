@@ -44,24 +44,28 @@ commands.push({
         const formatScore = (score: number, top: number, bottom: number) =>
             `${score} (${((top / bottom) * 100).toFixed(2)}%)`;
 
-        const totalScore = formatScore(scoreValid - scoreInvalid, scoreValid, scoreValid + scoreInvalid);
-        const scores = {
-            [scoreTypes.valid.label]: formatScore(scoreValid, scoreValid, breakdownTotal),
-            [scoreTypes.highest.label]: formatScore(scoreHighest, scoreHighest, breakdownTotal),
-            [scoreTypes.mercied.label]: formatScore(scoreMercy, scoreMercy, breakdownTotal),
-            [scoreTypes.invalid.label]: formatScore(scoreInvalid, scoreInvalid, breakdownTotal),
-        };
-
-        const lastActive = `Active ${timeSince(data.lastActiveTimestamp)} as ${data.lastActiveCount}`;
-        const lastHighest = `Highest ${timeSince(data.highestValidTimestamp)} as ${data.highestValidCount}`;
+        const header = ['Total Score', formatScore(scoreValid - scoreInvalid, scoreValid, scoreValid + scoreInvalid)];
+        const fields = [
+            [scoreTypes.valid.label, formatScore(scoreValid, scoreValid, breakdownTotal)],
+            [scoreTypes.highest.label, formatScore(scoreHighest, scoreHighest, breakdownTotal)],
+            [scoreTypes.mercied.label, formatScore(scoreMercy, scoreMercy, breakdownTotal)],
+            [scoreTypes.invalid.label, formatScore(scoreInvalid, scoreInvalid, breakdownTotal)],
+        ];
+        const footer = [
+            `Active ${timeSince(data.lastActiveTimestamp)} as ${data.lastActiveCount}`,
+            `Highest ${timeSince(data.highestValidTimestamp)} as ${data.highestValidCount}`,
+        ];
 
         const embed = baseEmbed
             .addFields(
-                { name: 'Total Score', value: Object.keys(scores).join('\n'), inline: true },
-                { name: totalScore, value: Object.values(scores).join('\n'), inline: true },
+                ...header.map((name, index) => ({
+                    name,
+                    value: fields.map((row) => row[index]).join('\n'),
+                    inline: true,
+                })),
             )
             .setFooter({
-                text: `${lastActive}\n${lastHighest}`,
+                text: footer.join('\n'),
             });
 
         await interaction.reply({ embeds: [embed] });
