@@ -1,8 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { commands } from '..';
 import { prisma } from '../../util';
-import { scoreTypes } from '../../events/count';
-import { computeScoreFields, formatDate, formatScore } from '.';
+import { createDisplay } from '.';
 
 commands.push({
     data: new SlashCommandBuilder()
@@ -39,14 +38,14 @@ commands.push({
             return;
         }
 
-        const description = [
-            `**Last count:** ${data.lastActiveCount}`,
-            formatDate(data.lastActiveTimestamp),
-            `**Highest count:**  ${data.highestValidCount}`,
-            formatDate(data.highestValidTimestamp),
-        ];
-
-        const embed = baseEmbed.setFields(computeScoreFields(data)).setDescription(description.join('\n'));
+        const embed = createDisplay({
+            ...data,
+            baseEmbed,
+            lastCount: data.lastActiveCount,
+            lastCountTimestamp: data.lastActiveTimestamp,
+            highestCount: data.highestValidCount,
+            highestCountTimestamp: data.highestValidTimestamp,
+        });
 
         await interaction.reply({ embeds: [embed] });
     },

@@ -1,7 +1,7 @@
 import { EmbedBuilder, SlashCommandBuilder, userMention } from 'discord.js';
 import { commands } from '..';
 import { prisma } from '../../util';
-import { computeScoreFields, formatDate } from '.';
+import { createDisplay } from '.';
 
 commands.push({
     data: new SlashCommandBuilder()
@@ -25,13 +25,6 @@ commands.push({
             return;
         }
 
-        const description = [
-            `**Current count:** ${data.currentCount}`,
-            `${userMention(data.lastCountMemberId!)} ${formatDate(data.lastCountTimestamp)}`,
-            `**Highest count:** ${data.highestCount}`,
-            `${userMention(data.highestCountMemberId!)} ${formatDate(data.highestCountTimestamp)}`,
-        ];
-
         const scores = await prisma.member.aggregate({
             where: { guildId: interaction.guildId },
             _sum: {
@@ -42,7 +35,13 @@ commands.push({
             },
         });
 
-        const embed = baseEmbed.setFields(computeScoreFields(scores._sum)).setDescription(description.join('\n'));
+        const embed = createDisplay({
+            ...data,
+            ...scores._sum,
+            baseEmbed,
+            lastCount: data.currentCount,
+        });
+
         await interaction.reply({ embeds: [embed] });
     },
 });

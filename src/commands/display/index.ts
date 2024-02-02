@@ -1,25 +1,47 @@
-import { time } from 'discord.js';
+import { EmbedBuilder, time, userMention } from 'discord.js';
 import { scoreTypes } from '../../events/count';
 
-export const formatDate = (date: Date) => time(Math.floor(date.getTime() / 1000), 'R');
+interface DisplayProps {
+    baseEmbed: EmbedBuilder;
 
-export const formatScore = (score: number, top: number, bottom: number) => {
-    const percent = bottom === 0 ? 0 : (top / bottom) * 100;
-    return `${score} (${percent.toFixed(2)}%)`;
-};
+    lastCount: number;
+    lastCountMemberId?: string | null;
+    lastCountTimestamp: Date;
 
-interface Scores {
+    highestCount: number;
+    highestCountMemberId?: string | null;
+    highestCountTimestamp: Date;
+
     scoreValid: number | null;
     scoreHighest: number | null;
     scoreMercy: number | null;
     scoreInvalid: number | null;
 }
 
-export const computeScoreFields = (scores: Scores) => {
-    const scoreValid = scores.scoreValid ?? 0;
-    const scoreHighest = scores.scoreHighest ?? 0;
-    const scoreMercy = scores.scoreMercy ?? 0;
-    const scoreInvalid = scores.scoreInvalid ?? 0;
+const formatUser = (userId?: string | null) => {
+    if (!userId) return '';
+    return userMention(userId);
+};
+
+const formatDate = (date: Date) => time(Math.floor(date.getTime() / 1000), 'R');
+
+const formatScore = (score: number, top: number, bottom: number) => {
+    const percent = bottom === 0 ? 0 : (top / bottom) * 100;
+    return `${score} (${percent.toFixed(2)}%)`;
+};
+
+export const createDisplay = (props: DisplayProps) => {
+    const description = [
+        `**Last count: ${props.lastCount}**`,
+        `${formatUser(props.lastCountMemberId)} ${formatDate(props.lastCountTimestamp)}`,
+        `**Highest count: ${props.highestCount}**`,
+        `${formatUser(props.highestCountMemberId)} ${formatDate(props.highestCountTimestamp)}`,
+    ];
+
+    const scoreValid = props.scoreValid ?? 0;
+    const scoreHighest = props.scoreHighest ?? 0;
+    const scoreMercy = props.scoreMercy ?? 0;
+    const scoreInvalid = props.scoreInvalid ?? 0;
 
     const breakdownTotal = scoreValid + scoreHighest + scoreMercy + scoreInvalid;
 
@@ -31,11 +53,15 @@ export const computeScoreFields = (scores: Scores) => {
         [scoreTypes.invalid.label, formatScore(scoreInvalid, scoreInvalid, breakdownTotal)],
     ];
 
-    return header.map((name, index) => ({
-        name,
-        value: rows.map((row) => row[index]).join('\n'),
-        inline: true,
-    }));
+    return props.baseEmbed
+        .setFields(
+            header.map((name, index) => ({
+                name,
+                value: rows.map((row) => row[index]).join('\n'),
+                inline: true,
+            })),
+        )
+        .setDescription(description.join('\n'));
 };
 
 import './user';
