@@ -1,16 +1,33 @@
 import { Events } from 'discord.js';
-import { client, prisma } from '..';
+import { client } from '..';
+import { prisma } from '../util';
 
 const numberRegex = /^\d+$/;
 const debugAllowDoubleCounts = true;
 const mercyMs = 1000 * 3;
 
-export const icons = {
-    valid: '✅',
-    highest: '✨',
-    mercied: '⌛',
-    invalid: '❌',
-};
+export const scoreTypes = {
+    valid: {
+        icon: '✅',
+        label: '✅ Valid',
+        scoreUpdate: { scoreValid: { increment: 1 } },
+    },
+    highest: {
+        icon: '✨',
+        label: '✨ Highest',
+        scoreUpdate: { scoreValid: { increment: 1 }, scoreHighest: { increment: 1 } },
+    },
+    mercied: {
+        icon: '⌛',
+        label: '⌛ Mercied',
+        scoreUpdate: { scoreMercy: { increment: 1 } },
+    },
+    invalid: {
+        icon: '❌',
+        label: '❌ Ruined',
+        scoreUpdate: { scoreInvalid: { increment: 1 } },
+    },
+} as const;
 
 client.on(Events.MessageCreate, async (message) => {
     if (message.author.bot || !message.inGuild()) return;
@@ -19,6 +36,8 @@ client.on(Events.MessageCreate, async (message) => {
     // Guild exisits and inside count channel
     const guild = await prisma.guild.findUnique({ where: { id: message.guildId } });
     if (message.channelId !== guild?.countChannelId) return;
+
+    prisma.member.ensure(guild.id, message.author.id);
 
     const updateCount = async (count: number, memberId: string | null) => {
         await prisma.guild.update({
@@ -31,16 +50,29 @@ client.on(Events.MessageCreate, async (message) => {
         });
     };
 
+    const updateScore = async (scoreType: keyof typeof scoreTypes) => {
+        await message.react(scoreTypes[scoreType].icon);
+        await prisma.member.update({
+            where: {
+                guildId_userId: {
+                    guildId: guild.id,
+                    userId: message.author.id,
+                },
+            },
+            data: scoreTypes[scoreType].scoreUpdate,
+        });
+    };
+
     const ruinCount = async (reason: string) => {
         const timeBetween = message.createdTimestamp - guild.lastCountTimestamp.getTime();
         if (timeBetween <= mercyMs) {
-            await message.react(icons.mercied);
+            await updateScore('mercied');
             return;
         }
 
         updateCount(0, null);
-        await message.react(icons.invalid);
         await message.channel.send(`**${reason}** Count ruined at **${guild.currentCount}**!`);
+        await updateScore('invalid');
     };
 
     if (!debugAllowDoubleCounts && message.author.id === guild.lastCountMemberId) {
@@ -63,8 +95,8 @@ client.on(Events.MessageCreate, async (message) => {
                 highestCount: nextCount,
             },
         });
-        await message.react(icons.highest);
+        await updateScore('highest');
     } else {
-        await message.react(icons.valid);
+        await updateScore('valid');
     }
 });

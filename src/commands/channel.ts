@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, PermissionFlagsBits, channelMention } from 'discord.js';
 import { commands } from '.';
-import { prisma } from '..';
+import { prisma } from '../util';
 
 commands.push({
     data: new SlashCommandBuilder()
