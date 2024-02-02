@@ -31,12 +31,10 @@ const formatScore = (score: number, top: number, bottom: number) => {
 };
 
 export const createDisplay = (props: DisplayProps) => {
-    const description = [
-        `**Last count: ${props.lastCount}**`,
-        `${formatUser(props.lastCountMemberId)} ${formatDate(props.lastCountTimestamp)}`,
-        `**Highest count: ${props.highestCount}**`,
-        `${formatUser(props.highestCountMemberId)} ${formatDate(props.highestCountTimestamp)}`,
-    ];
+    const body = [
+        ['Last count', props.lastCount, props.lastCountMemberId, props.lastCountTimestamp],
+        ['Highest count', props.highestCount, props.highestCountMemberId, props.highestCountTimestamp],
+    ] as const;
 
     const scoreValid = props.scoreValid ?? 0;
     const scoreHighest = props.scoreHighest ?? 0;
@@ -47,21 +45,26 @@ export const createDisplay = (props: DisplayProps) => {
 
     const header = ['Total Score', formatScore(scoreValid - scoreInvalid, scoreValid, scoreValid + scoreInvalid)];
     const rows = [
-        [scoreTypes.valid.label, formatScore(scoreValid, scoreValid, breakdownTotal)],
+        [scoreTypes.valid.label, formatScore(scoreValid, scoreValid - scoreHighest, breakdownTotal)],
         [scoreTypes.highest.label, formatScore(scoreHighest, scoreHighest, breakdownTotal)],
         [scoreTypes.spared.label, formatScore(scoreSpared, scoreSpared, breakdownTotal)],
         [scoreTypes.invalid.label, formatScore(scoreInvalid, scoreInvalid, breakdownTotal)],
     ];
 
     return props.baseEmbed
-        .setFields(
-            header.map((name, index) => ({
+        .addFields(
+            ...body.map(([label, count, member, time]) => ({
+                name: `**${label}: ${count}**`,
+                value: `${formatUser(member)} ${formatDate(time)}`,
+            })),
+        )
+        .addFields(
+            ...header.map((name, index) => ({
                 name,
                 value: rows.map((row) => row[index]).join('\n'),
                 inline: true,
             })),
-        )
-        .setDescription(description.join('\n'));
+        );
 };
 
 import './user';
