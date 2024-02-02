@@ -1,6 +1,6 @@
 import { EmbedBuilder, SlashCommandBuilder, time, userMention } from 'discord.js';
-import { commands } from '.';
-import { prisma, timeSince } from '../util';
+import { commands } from '..';
+import { prisma } from '../../util';
 
 commands.push({
     data: new SlashCommandBuilder()

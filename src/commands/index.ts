@@ -7,7 +7,7 @@ interface Command {
 
 export const commands: Command[] = [];
 
-await Promise.all([import('./channel'), import('./user'), import('./server')]);
+await Promise.all([import('./channel'), import('./display')]);
 
 commands.push({
     data: new SlashCommandBuilder().setName('ping').setDescription('test'),

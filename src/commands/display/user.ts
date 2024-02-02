@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder, time } from 'discord.js';
-import { commands } from '.';
-import { prisma, timeSince } from '../util';
-import { scoreTypes } from '../events/count';
+import { commands } from '..';
+import { prisma } from '../../util';
+import { scoreTypes } from '../../events/count';
 
 commands.push({
     data: new SlashCommandBuilder()
