@@ -1,7 +1,8 @@
-import { SlashCommandBuilder, EmbedBuilder, time } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { commands } from '..';
 import { prisma } from '../../util';
 import { scoreTypes } from '../../events/count';
+import { computeScoreFields, formatDate, formatScore } from '.';
 
 commands.push({
     data: new SlashCommandBuilder()
@@ -38,8 +39,6 @@ commands.push({
             return;
         }
 
-        const formatDate = (date: Date) => time(Math.floor(date.getTime() / 1000), 'R');
-
         const description = [
             `**Last count:** ${data.lastActiveCount}`,
             formatDate(data.lastActiveTimestamp),
@@ -47,28 +46,8 @@ commands.push({
             formatDate(data.highestValidTimestamp),
         ];
 
-        const { scoreValid, scoreHighest, scoreMercy, scoreInvalid } = data;
-        const breakdownTotal = scoreValid + scoreHighest + scoreMercy + scoreInvalid;
-
-        const formatScore = (score: number, top: number, bottom: number) =>
-            `${score} (${((top / bottom) * 100).toFixed(2)}%)`;
-
-        const header = ['Total Score', formatScore(scoreValid - scoreInvalid, scoreValid, scoreValid + scoreInvalid)];
-        const fields = [
-            [scoreTypes.valid.label, formatScore(scoreValid, scoreValid, breakdownTotal)],
-            [scoreTypes.highest.label, formatScore(scoreHighest, scoreHighest, breakdownTotal)],
-            [scoreTypes.mercied.label, formatScore(scoreMercy, scoreMercy, breakdownTotal)],
-            [scoreTypes.invalid.label, formatScore(scoreInvalid, scoreInvalid, breakdownTotal)],
-        ];
-
         const embed = baseEmbed
-            .addFields(
-                ...header.map((name, index) => ({
-                    name,
-                    value: fields.map((row) => row[index]).join('\n'),
-                    inline: true,
-                })),
-            )
+            .setFields(computeScoreFields(data.scoreValid, data.scoreHighest, data.scoreMercy, data.scoreInvalid))
             .setDescription(description.join('\n'));
 
         await interaction.reply({ embeds: [embed] });

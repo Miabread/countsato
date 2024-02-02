@@ -1,6 +1,7 @@
-import { EmbedBuilder, SlashCommandBuilder, time, userMention } from 'discord.js';
+import { EmbedBuilder, SlashCommandBuilder, userMention } from 'discord.js';
 import { commands } from '..';
 import { prisma } from '../../util';
+import { formatDate } from '.';
 
 commands.push({
     data: new SlashCommandBuilder()
@@ -23,8 +24,6 @@ commands.push({
             await interaction.reply({ embeds: [embed] });
             return;
         }
-
-        const formatDate = (date: Date) => time(Math.floor(date.getTime() / 1000), 'R');
 
         const description = [
             `**Current count:** ${data.currentCount}`,
