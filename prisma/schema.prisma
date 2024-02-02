@@ -11,15 +11,15 @@ datasource db {
 }
 
 model Guild {
-    id      String   @id
-    members Member[]
-
+    id             String   @id
+    members        Member[]
     countChannelId String?
-    currentCount   Int     @default(0)
-    highestCount   Int     @default(0)
 
-    lastCountMemberId     String?
-    lastCountTimestamp    DateTime @default(now())
+    lastCount          Int      @default(0)
+    lastCountMemberId  String?
+    lastCountTimestamp DateTime @default(now())
+
+    highestCount          Int      @default(0)
     highestCountMemberId  String?
     highestCountTimestamp DateTime @default(now())
 }
@@ -35,15 +35,15 @@ model Member {
     guild   Guild  @relation(fields: [guildId], references: [id])
     user    User   @relation(fields: [userId], references: [id])
 
+    lastCount             Int      @default(0)
+    lastCountTimestamp    DateTime @default(now())
+    highestCount          Int      @default(0)
+    highestCountTimestamp DateTime @default(now())
+
     scoreValid   Int @default(0)
     scoreHighest Int @default(0)
     scoreMercy   Int @default(0)
     scoreInvalid Int @default(0)
-
-    lastActiveCount       Int      @default(0)
-    lastActiveTimestamp   DateTime @default(now())
-    highestValidCount     Int      @default(0)
-    highestValidTimestamp DateTime @default(now())
 
     @@id([guildId, userId])
 }

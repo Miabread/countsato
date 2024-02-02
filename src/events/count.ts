@@ -43,7 +43,7 @@ client.on(Events.MessageCreate, async (message) => {
         await prisma.guild.update({
             where: { id: guild.id },
             data: {
-                currentCount: count,
+                lastCount: count,
                 lastCountMemberId: memberId,
                 lastCountTimestamp: new Date(),
 
@@ -69,12 +69,12 @@ client.on(Events.MessageCreate, async (message) => {
                 ...scoreTypes[scoreType].scoreUpdate,
 
                 ...(count && {
-                    lastActiveCount: count,
-                    lastActiveTimestamp: new Date(),
+                    lastCount: count,
+                    lastCountTimestamp: new Date(),
 
-                    ...(count > member.highestValidCount && {
-                        highestValidCount: count,
-                        highestValidTimestamp: new Date(),
+                    ...(count > member.highestCount && {
+                        highestCount: count,
+                        highestCountTimestamp: new Date(),
                     }),
                 }),
             },
@@ -89,7 +89,7 @@ client.on(Events.MessageCreate, async (message) => {
         }
 
         updateCount(0, null);
-        await message.channel.send(`**${reason}** Count ruined at **${guild.currentCount}**!`);
+        await message.channel.send(`**${reason}** Count ruined at **${guild.lastCount}**!`);
         await updateScore('invalid');
     };
 
@@ -98,7 +98,7 @@ client.on(Events.MessageCreate, async (message) => {
     }
 
     const inputCount = parseInt(message.content, 10);
-    const nextCount = guild.currentCount + 1;
+    const nextCount = guild.lastCount + 1;
 
     if (inputCount !== nextCount) {
         return await ruinCount('Wrong number!');

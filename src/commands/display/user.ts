@@ -38,15 +38,7 @@ commands.push({
             return;
         }
 
-        const embed = createDisplay({
-            ...data,
-            baseEmbed,
-            lastCount: data.lastActiveCount,
-            lastCountTimestamp: data.lastActiveTimestamp,
-            highestCount: data.highestValidCount,
-            highestCountTimestamp: data.highestValidTimestamp,
-        });
-
+        const embed = createDisplay({ baseEmbed, ...data });
         await interaction.reply({ embeds: [embed] });
     },
 });

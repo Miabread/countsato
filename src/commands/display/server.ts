@@ -35,13 +35,7 @@ commands.push({
             },
         });
 
-        const embed = createDisplay({
-            ...data,
-            ...scores._sum,
-            baseEmbed,
-            lastCount: data.currentCount,
-        });
-
+        const embed = createDisplay({ baseEmbed, ...data, ...scores._sum });
         await interaction.reply({ embeds: [embed] });
     },
 });
