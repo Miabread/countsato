@@ -37,7 +37,7 @@ client.on(Events.MessageCreate, async (message) => {
     const guild = await prisma.guild.findUnique({ where: { id: message.guildId } });
     if (message.channelId !== guild?.countChannelId) return;
 
-    prisma.member.ensure(guild.id, message.author.id);
+    const member = await prisma.member.ensure(guild.id, message.author.id);
 
     const updateCount = async (count: number, memberId: string | null) => {
         await prisma.guild.update({
@@ -50,7 +50,7 @@ client.on(Events.MessageCreate, async (message) => {
         });
     };
 
-    const updateScore = async (scoreType: keyof typeof scoreTypes) => {
+    const updateScore = async (scoreType: keyof typeof scoreTypes, count?: number) => {
         await message.react(scoreTypes[scoreType].icon);
         await prisma.member.update({
             where: {
@@ -59,7 +59,19 @@ client.on(Events.MessageCreate, async (message) => {
                     userId: message.author.id,
                 },
             },
-            data: scoreTypes[scoreType].scoreUpdate,
+            data: {
+                ...scoreTypes[scoreType].scoreUpdate,
+
+                ...(count && {
+                    lastActiveCount: count,
+                    lastActiveTimestamp: new Date(),
+
+                    ...(count > member.highestValidCount && {
+                        highestValidCount: count,
+                        highestValidTimestamp: new Date(),
+                    }),
+                }),
+            },
         });
     };
 
@@ -95,8 +107,8 @@ client.on(Events.MessageCreate, async (message) => {
                 highestCount: nextCount,
             },
         });
-        await updateScore('highest');
+        await updateScore('highest', nextCount);
     } else {
-        await updateScore('valid');
+        await updateScore('valid', nextCount);
     }
 });

@@ -39,10 +39,10 @@ model Member {
     scoreMercy   Int @default(0)
     scoreInvalid Int @default(0)
 
-    lastActiveCount       Int?
-    lastActive            DateTime?
-    highestValidCount     Int?
-    highestValidTimestamp DateTime?
+    lastActiveCount       Int      @default(0)
+    lastActiveTimestamp   DateTime @default(now())
+    highestValidCount     Int      @default(0)
+    highestValidTimestamp DateTime @default(now())
 
     @@id([guildId, userId])
 }

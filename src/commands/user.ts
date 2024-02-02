@@ -15,19 +15,34 @@ commands.push({
 
         const user = interaction.options.getUser('user', false) ?? interaction.user;
 
-        const data = await prisma.member.ensure(interaction.guildId, user.id);
-
         const member = interaction.guild?.members.cache.get(user.id);
-        const name = member?.nickname ?? user.displayName;
-        const avatar = member?.avatarURL() ?? user.avatarURL();
-        const color = member?.displayColor ?? null;
+        const baseEmbed = new EmbedBuilder()
+            .setTitle(member?.nickname ?? user.displayName)
+            .setThumbnail(member?.avatarURL() ?? user.avatarURL())
+            .setColor(member?.displayColor ?? null);
+
+        const data = await prisma.member.findUnique({
+            where: {
+                guildId_userId: {
+                    guildId: interaction.guildId,
+                    userId: user.id,
+                },
+            },
+        });
+
+        if (!data) {
+            const embed = baseEmbed.setDescription(
+                user.bot ? "Computers can't do math, silly." : "This user hasn't counted yet.",
+            );
+            await interaction.reply({ embeds: [embed] });
+            return;
+        }
 
         const { scoreValid, scoreHighest, scoreMercy, scoreInvalid } = data;
         const breakdownTotal = scoreValid + scoreHighest + scoreMercy + scoreInvalid;
 
         const formatScore = (score: number, top: number, bottom: number) =>
             `${score} (${((top / bottom) * 100).toFixed(2)}%)`;
-        const formatDate = (date: Date | null) => (date ? timeSince(date) : 'never');
 
         const totalScore = formatScore(scoreValid - scoreInvalid, scoreValid, scoreValid + scoreInvalid);
         const scores = {
@@ -36,13 +51,11 @@ commands.push({
             [scoreTypes.mercied.label]: formatScore(scoreMercy, scoreMercy, breakdownTotal),
             [scoreTypes.invalid.label]: formatScore(scoreInvalid, scoreInvalid, breakdownTotal),
         };
-        const lastActive = `Active ${formatDate(data.lastActive)}`;
-        const lastHighest = `Highest ${formatDate(data.highestValidTimestamp)} (${data.highestValidCount})`;
 
-        const embed = new EmbedBuilder()
-            .setTitle(name)
-            .setThumbnail(avatar)
-            .setColor(color)
+        const lastActive = `Active ${timeSince(data.lastActiveTimestamp)} as ${data.lastActiveCount}`;
+        const lastHighest = `Highest ${timeSince(data.highestValidTimestamp)} as ${data.highestValidCount}`;
+
+        const embed = baseEmbed
             .addFields(
                 { name: 'Total Score', value: Object.keys(scores).join('\n'), inline: true },
                 { name: totalScore, value: Object.values(scores).join('\n'), inline: true },
