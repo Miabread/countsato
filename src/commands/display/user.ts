@@ -46,9 +46,7 @@ commands.push({
             formatDate(data.highestValidTimestamp),
         ];
 
-        const embed = baseEmbed
-            .setFields(computeScoreFields(data.scoreValid, data.scoreHighest, data.scoreMercy, data.scoreInvalid))
-            .setDescription(description.join('\n'));
+        const embed = baseEmbed.setFields(computeScoreFields(data)).setDescription(description.join('\n'));
 
         await interaction.reply({ embeds: [embed] });
     },

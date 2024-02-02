@@ -1,7 +1,7 @@
 import { EmbedBuilder, SlashCommandBuilder, userMention } from 'discord.js';
 import { commands } from '..';
 import { prisma } from '../../util';
-import { formatDate } from '.';
+import { computeScoreFields, formatDate } from '.';
 
 commands.push({
     data: new SlashCommandBuilder()
@@ -32,7 +32,17 @@ commands.push({
             `${userMention(data.highestCountMemberId!)} ${formatDate(data.highestCountTimestamp)}`,
         ];
 
-        const embed = baseEmbed.setDescription(description.join('\n'));
+        const scores = await prisma.member.aggregate({
+            where: { guildId: interaction.guildId },
+            _sum: {
+                scoreValid: true,
+                scoreHighest: true,
+                scoreMercy: true,
+                scoreInvalid: true,
+            },
+        });
+
+        const embed = baseEmbed.setFields(computeScoreFields(scores._sum)).setDescription(description.join('\n'));
         await interaction.reply({ embeds: [embed] });
     },
 });
