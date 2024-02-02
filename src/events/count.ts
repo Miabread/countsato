@@ -9,22 +9,22 @@ const mercyMs = 1000 * 3;
 export const scoreTypes = {
     valid: {
         icon: '✅',
-        label: '✅ Valid',
+        label: '✅ Counts',
         scoreUpdate: { scoreValid: { increment: 1 } },
     },
     highest: {
         icon: '✨',
-        label: '✨ Highest',
+        label: '✨ Record',
         scoreUpdate: { scoreValid: { increment: 1 }, scoreHighest: { increment: 1 } },
     },
-    mercied: {
+    spared: {
         icon: '⌛',
-        label: '⌛ Mercied',
+        label: '⌛ Spared',
         scoreUpdate: { scoreMercy: { increment: 1 } },
     },
     invalid: {
         icon: '❌',
-        label: '❌ Ruined',
+        label: '❌ Incorrect',
         scoreUpdate: { scoreInvalid: { increment: 1 } },
     },
 } as const;
@@ -33,7 +33,6 @@ client.on(Events.MessageCreate, async (message) => {
     if (message.author.bot || !message.inGuild()) return;
     if (!numberRegex.test(message.content)) return;
 
-    // Guild exisits and inside count channel
     const guild = await prisma.guild.findUnique({ where: { id: message.guildId } });
     if (message.channelId !== guild?.countChannelId) return;
 
@@ -84,7 +83,7 @@ client.on(Events.MessageCreate, async (message) => {
     const ruinCount = async (reason: string) => {
         const timeBetween = message.createdTimestamp - guild.lastCountTimestamp.getTime();
         if (timeBetween <= mercyMs) {
-            await updateScore('mercied');
+            await updateScore('spared');
             return;
         }
 

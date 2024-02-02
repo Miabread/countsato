@@ -30,7 +30,7 @@ commands.push({
             _sum: {
                 scoreValid: true,
                 scoreHighest: true,
-                scoreMercy: true,
+                scoreSpared: true,
                 scoreInvalid: true,
             },
         });

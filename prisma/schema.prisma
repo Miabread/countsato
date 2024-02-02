@@ -42,7 +42,7 @@ model Member {
 
     scoreValid   Int @default(0)
     scoreHighest Int @default(0)
-    scoreMercy   Int @default(0)
+    scoreSpared  Int @default(0)
     scoreInvalid Int @default(0)
 
     @@id([guildId, userId])

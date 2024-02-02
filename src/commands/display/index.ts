@@ -14,7 +14,7 @@ interface DisplayProps {
 
     scoreValid: number | null;
     scoreHighest: number | null;
-    scoreMercy: number | null;
+    scoreSpared: number | null;
     scoreInvalid: number | null;
 }
 
@@ -40,16 +40,16 @@ export const createDisplay = (props: DisplayProps) => {
 
     const scoreValid = props.scoreValid ?? 0;
     const scoreHighest = props.scoreHighest ?? 0;
-    const scoreMercy = props.scoreMercy ?? 0;
+    const scoreSpared = props.scoreSpared ?? 0;
     const scoreInvalid = props.scoreInvalid ?? 0;
 
-    const breakdownTotal = scoreValid + scoreHighest + scoreMercy + scoreInvalid;
+    const breakdownTotal = scoreValid + scoreHighest + scoreSpared + scoreInvalid;
 
     const header = ['Total Score', formatScore(scoreValid - scoreInvalid, scoreValid, scoreValid + scoreInvalid)];
     const rows = [
         [scoreTypes.valid.label, formatScore(scoreValid, scoreValid, breakdownTotal)],
         [scoreTypes.highest.label, formatScore(scoreHighest, scoreHighest, breakdownTotal)],
-        [scoreTypes.mercied.label, formatScore(scoreMercy, scoreMercy, breakdownTotal)],
+        [scoreTypes.spared.label, formatScore(scoreSpared, scoreSpared, breakdownTotal)],
         [scoreTypes.invalid.label, formatScore(scoreInvalid, scoreInvalid, breakdownTotal)],
     ];
 
