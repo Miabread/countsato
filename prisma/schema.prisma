@@ -22,6 +22,9 @@ model Guild {
     highestCount          Int      @default(0)
     highestCountMemberId  String?
     highestCountTimestamp DateTime @default(now())
+
+    allowDoubleCounting Boolean @default(false)
+    graceMilliseconds   Int     @default(750)
 }
 
 model User {

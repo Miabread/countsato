@@ -7,5 +7,9 @@
     "files.insertFinalNewline": true,
     "files.trimTrailingWhitespace": true,
     "editor.semanticHighlighting.enabled": true,
-    "files.eol": "\n"
+    "files.eol": "\n",
+    "cSpell.words": [
+        "gamerule",
+        "gamerules"
+    ]
 }
