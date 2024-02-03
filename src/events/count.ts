@@ -15,14 +15,14 @@ export const scoreTypes = {
         label: '✨ Record',
         scoreUpdate: { scoreValid: { increment: 1 }, scoreHighest: { increment: 1 } },
     },
-    spared: {
+    graced: {
         icon: '⌛',
-        label: '⌛ Spared',
-        scoreUpdate: { scoreMercy: { increment: 1 } },
+        label: '⌛ Graced',
+        scoreUpdate: { scoreGraced: { increment: 1 } },
     },
     invalid: {
         icon: '❌',
-        label: '❌ Incorrect',
+        label: '❌ Invalid',
         scoreUpdate: { scoreInvalid: { increment: 1 } },
     },
 } as const;
@@ -81,7 +81,7 @@ client.on(Events.MessageCreate, async (message) => {
     const ruinCount = async (reason: string) => {
         const timeBetween = message.createdTimestamp - guild.lastCountTimestamp.getTime();
         if (timeBetween <= guild.graceMilliseconds) {
-            await updateScore('spared');
+            await updateScore('graced');
             return;
         }
 
