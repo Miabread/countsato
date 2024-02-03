@@ -32,7 +32,7 @@ client.on(Events.MessageCreate, async (message) => {
     if (!numberRegex.test(message.content)) return;
 
     const guild = await prisma.guild.findUnique({ where: { id: message.guildId } });
-    if (message.channelId !== guild?.countChannelId) return;
+    if (message.channelId !== guild?.countingChannel) return;
 
     const member = await prisma.member.ensure(guild.id, message.author.id);
 
@@ -79,7 +79,7 @@ client.on(Events.MessageCreate, async (message) => {
     };
 
     const ruinCount = async (reason: string) => {
-        const timeBetween = message.createdTimestamp - guild.lastCountTimestamp.getTime();
+        const timeBetween = Date.now() - guild.lastCountTimestamp.getTime();
         if (timeBetween <= guild.graceMilliseconds) {
             await updateScore('graced');
             return;
