@@ -6,6 +6,8 @@
     "moduleDetection": "force",
     "jsx": "react-jsx",
     "allowJs": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
 
     /* Bundler mode */
     "moduleResolution": "node",

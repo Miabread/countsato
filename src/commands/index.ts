@@ -7,11 +7,4 @@ interface Command {
 
 export const commands: Command[] = [];
 
-await Promise.all([import('./stats'), import('./gamerule')]);
-
-commands.push({
-    data: new SlashCommandBuilder().setName('ping').setDescription('test'),
-    async execute(interaction) {
-        await interaction.reply('Pong!');
-    },
-});
+await Promise.all([import('./stats'), import('./gamerule'), import('./ping')]);
