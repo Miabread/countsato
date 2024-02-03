@@ -1,7 +1,7 @@
 import { EmbedBuilder, SlashCommandBuilder, time, userMention } from 'discord.js';
-import { scoreTypes } from '../../events/count';
-import { commands } from '..';
-import { prisma } from '../../util';
+import { scoreTypes } from '../events/count';
+import { commands } from '.';
+import { prisma } from '../util';
 
 interface DisplayProps {
     baseEmbed: EmbedBuilder;
