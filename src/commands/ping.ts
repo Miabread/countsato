@@ -11,6 +11,7 @@ commands.push({
 
         const embed = new EmbedBuilder()
             .setAuthor({ name: `Countsato v${data.version}`, iconURL: interaction.client.user.displayAvatarURL() })
+            .setColor(interaction.guild?.members.me?.displayColor ?? null)
             .addFields(
                 { name: 'Roundtrip', value: `${latency}ms`, inline: true },
                 { name: 'Websocket', value: `${interaction.client.ws.ping}ms`, inline: true },
