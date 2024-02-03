@@ -1,6 +1,7 @@
 import {
     ChannelType,
     ChatInputCommandInteraction,
+    EmbedBuilder,
     PermissionFlagsBits,
     SlashCommandBuilder,
     SlashCommandSubcommandBuilder,
@@ -65,16 +66,19 @@ const TextChannel: Gamerule<string> = {
 
 const gamerules = {
     allow_double_counting: {
+        title: 'Allow Double Counting',
         description: 'If users are able to count with themselves',
         type: Boolean,
         field: 'allowDoubleCounting',
     },
     grace_milliseconds: {
+        title: 'Grace Milliseconds',
         description: 'Amount of milliseconds after last valid count before invalid counts ruin the count',
         type: Integer,
         field: 'graceMilliseconds',
     },
     counting_channel: {
+        title: 'Counting Channel',
         description: 'The channel the bot listens for counting',
         type: TextChannel,
         field: 'countingChannel',
@@ -112,13 +116,20 @@ commands.push({
         const gamerule = gamerules[key as keyof typeof gamerules];
         if (!gamerule) throw new Error('gamerule');
 
+        const embed = new EmbedBuilder()
+            .setTitle(gamerule.title)
+            .setAuthor({ name: gamerule.title, iconURL: interaction.guild.iconURL() ?? undefined })
+            .setColor(interaction.member.displayColor);
+
         const value = gamerule.type.readOption(interaction);
         if (value === null) {
-            await interaction.reply(`Currently ${key} is ${gamerule.type.display(data[gamerule.field] as never)}`);
+            embed.setTitle(gamerule.type.display(data[gamerule.field] as never));
+            await interaction.reply({ embeds: [embed] });
             return;
         }
 
+        embed.setTitle(gamerule.type.display(value as never)).setDescription('Value updated!');
         await prisma.guild.update({ where, data: { [gamerule.field]: value } });
-        await interaction.reply(`Set ${key} to ${gamerule.type.display(value as never)}`);
+        await interaction.reply({ embeds: [embed] });
     },
 });

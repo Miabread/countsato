@@ -4,8 +4,6 @@ import { commands } from '.';
 import { prisma } from '../util';
 
 interface DisplayProps {
-    baseEmbed: EmbedBuilder;
-
     lastCount: number;
     lastCountMemberId?: string | null;
     lastCountTimestamp: Date;
@@ -32,7 +30,7 @@ const formatScore = (score: number, top: number, bottom: number) => {
     return `${score} (${percent.toFixed(2)}%)`;
 };
 
-export const createDisplay = (props: DisplayProps) => {
+export const createDisplay = (embed: EmbedBuilder, props: DisplayProps) => {
     const body = [
         ['Last Count', props.lastCount, props.lastCountMemberId, props.lastCountTimestamp],
         ['Highest Count', props.highestCount, props.highestCountMemberId, props.highestCountTimestamp],
@@ -53,7 +51,7 @@ export const createDisplay = (props: DisplayProps) => {
         [scoreTypes.invalid.label, formatScore(scoreInvalid, scoreInvalid, breakdownTotal)],
     ];
 
-    return props.baseEmbed
+    embed
         .addFields(
             ...body.map(([label, count, member, time]) => ({
                 name: `**${label}: ${count}**`,
@@ -86,7 +84,7 @@ commands.push({
         if (!interaction.inCachedGuild()) throw new Error('guild');
 
         if (interaction.options.getSubcommand() === 'server') {
-            const baseEmbed = new EmbedBuilder()
+            const embed = new EmbedBuilder()
                 .setTitle(interaction.guild.name)
                 .setThumbnail(interaction.guild.iconURL())
                 .setColor(interaction.guild.members.me?.displayColor ?? null);
@@ -94,7 +92,7 @@ commands.push({
             const data = await prisma.guild.findUnique({ where: { id: interaction.guildId } });
 
             if (!data) {
-                const embed = baseEmbed.setDescription("This server hasn't counted yet! Get started!");
+                embed.setDescription("This server hasn't counted yet! Get started!");
                 await interaction.reply({ embeds: [embed] });
                 return;
             }
@@ -109,13 +107,13 @@ commands.push({
                 },
             });
 
-            const embed = createDisplay({ baseEmbed, ...data, ...scores._sum });
+            createDisplay(embed, { ...data, ...scores._sum });
             await interaction.reply({ embeds: [embed] });
         } else if (interaction.options.getSubcommand() === 'member') {
             const user = interaction.options.getUser('member', false) ?? interaction.user;
 
             const member = interaction.guild?.members.cache.get(user.id);
-            const baseEmbed = new EmbedBuilder()
+            const embed = new EmbedBuilder()
                 .setTitle(member?.nickname ?? user.displayName)
                 .setThumbnail(member?.avatarURL() ?? user.avatarURL())
                 .setColor(member?.displayColor ?? null);
@@ -130,14 +128,13 @@ commands.push({
             });
 
             if (!data) {
-                const embed = baseEmbed.setDescription(
-                    user.bot ? "Computers can't do math, silly." : "This user hasn't counted yet.",
-                );
+                embed.setDescription(user.bot ? "Computers can't do math, silly." : "This user hasn't counted yet.");
                 await interaction.reply({ embeds: [embed] });
                 return;
             }
 
-            const embed = createDisplay({ baseEmbed, ...data }).setFooter({
+            createDisplay(embed, { ...data });
+            embed.setFooter({
                 text: interaction.guild.name,
                 iconURL: interaction.guild.iconURL() ?? undefined,
             });
