@@ -3,8 +3,6 @@ import { client } from '..';
 import { prisma } from '../util';
 
 const numberRegex = /^\d+$/;
-const debugAllowDoubleCounts = true;
-const mercyMs = 1000 * 3;
 
 export const scoreTypes = {
     valid: {
@@ -82,7 +80,7 @@ client.on(Events.MessageCreate, async (message) => {
 
     const ruinCount = async (reason: string) => {
         const timeBetween = message.createdTimestamp - guild.lastCountTimestamp.getTime();
-        if (timeBetween <= mercyMs) {
+        if (timeBetween <= guild.graceMilliseconds) {
             await updateScore('spared');
             return;
         }
@@ -92,7 +90,7 @@ client.on(Events.MessageCreate, async (message) => {
         await updateScore('invalid');
     };
 
-    if (!debugAllowDoubleCounts && message.author.id === guild.lastCountMemberId) {
+    if (!guild.allowDoubleCounting && message.author.id === guild.lastCountMemberId) {
         return await ruinCount('Double counted!');
     }
 
