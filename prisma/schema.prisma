@@ -11,9 +11,8 @@ datasource db {
 }
 
 model Guild {
-    id             String   @id
-    members        Member[]
-    countChannelId String?
+    id      String   @id
+    members Member[]
 
     lastCount          Int      @default(0)
     lastCountMemberId  String?
@@ -23,6 +22,7 @@ model Guild {
     highestCountMemberId  String?
     highestCountTimestamp DateTime @default(now())
 
+    countingChannel     String?
     allowDoubleCounting Boolean @default(false)
     graceMilliseconds   Int     @default(750)
 }
