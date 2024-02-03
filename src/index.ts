@@ -5,7 +5,8 @@ export const client = new Client({
 });
 
 client.once(Events.ClientReady, (client) => {
-    console.log(`Ready! Logged in as ${client.user.tag}`);
+    console.log(`Ready! Logged in as ${client.user.tag} for ${client.guilds.cache.size} guilds`);
+    client.user.setActivity(process.env.CLIENT_ACTIVITY ?? '');
 });
 
 await import('./events');
