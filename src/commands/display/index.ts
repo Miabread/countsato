@@ -1,5 +1,7 @@
-import { EmbedBuilder, time, userMention } from 'discord.js';
+import { EmbedBuilder, SlashCommandBuilder, time, userMention } from 'discord.js';
 import { scoreTypes } from '../../events/count';
+import { commands } from '..';
+import { prisma } from '../../util';
 
 interface DisplayProps {
     baseEmbed: EmbedBuilder;
@@ -67,5 +69,79 @@ export const createDisplay = (props: DisplayProps) => {
         );
 };
 
-import './user';
-import './server';
+commands.push({
+    data: new SlashCommandBuilder()
+        .setName('stats')
+        .setDescription('hi')
+        .addSubcommand((sub) =>
+            sub
+                .setName('member')
+                .setDescription('View the stats of a server member')
+                .addUserOption((option) => option.setName('member').setDescription('The member to view')),
+        )
+        .addSubcommand((sub) => sub.setName('server').setDescription('View the stats of this server'))
+        .setDMPermission(false),
+
+    async execute(interaction) {
+        if (!interaction.inCachedGuild()) throw new Error('guild');
+
+        if (interaction.options.getSubcommand() === 'server') {
+            const baseEmbed = new EmbedBuilder()
+                .setTitle(interaction.guild.name)
+                .setThumbnail(interaction.guild.iconURL())
+                .setColor(interaction.guild.members.me?.displayColor ?? null);
+
+            const data = await prisma.guild.findUnique({ where: { id: interaction.guildId } });
+
+            if (!data) {
+                const embed = baseEmbed.setDescription("This server hasn't counted yet! Get started!");
+                await interaction.reply({ embeds: [embed] });
+                return;
+            }
+
+            const scores = await prisma.member.aggregate({
+                where: { guildId: interaction.guildId },
+                _sum: {
+                    scoreValid: true,
+                    scoreHighest: true,
+                    scoreSpared: true,
+                    scoreInvalid: true,
+                },
+            });
+
+            const embed = createDisplay({ baseEmbed, ...data, ...scores._sum });
+            await interaction.reply({ embeds: [embed] });
+        } else if (interaction.options.getSubcommand() === 'member') {
+            const user = interaction.options.getUser('member', false) ?? interaction.user;
+
+            const member = interaction.guild?.members.cache.get(user.id);
+            const baseEmbed = new EmbedBuilder()
+                .setTitle(member?.nickname ?? user.displayName)
+                .setThumbnail(member?.avatarURL() ?? user.avatarURL())
+                .setColor(member?.displayColor ?? null);
+
+            const data = await prisma.member.findUnique({
+                where: {
+                    guildId_userId: {
+                        guildId: interaction.guildId,
+                        userId: user.id,
+                    },
+                },
+            });
+
+            if (!data) {
+                const embed = baseEmbed.setDescription(
+                    user.bot ? "Computers can't do math, silly." : "This user hasn't counted yet.",
+                );
+                await interaction.reply({ embeds: [embed] });
+                return;
+            }
+
+            const embed = createDisplay({ baseEmbed, ...data }).setFooter({
+                text: interaction.guild.name,
+                iconURL: interaction.guild.iconURL() ?? undefined,
+            });
+            await interaction.reply({ embeds: [embed] });
+        }
+    },
+});

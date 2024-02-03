@@ -1,8 +1,8 @@
-import { SlashCommandBuilder, type CommandInteraction } from 'discord.js';
+import { SlashCommandBuilder, type ChatInputCommandInteraction } from 'discord.js';
 
 interface Command {
     data: Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>;
-    execute(interaction: CommandInteraction): Promise<unknown>;
+    execute(interaction: ChatInputCommandInteraction): Promise<unknown>;
 }
 
 export const commands: Command[] = [];
