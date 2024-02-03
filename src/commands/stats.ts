@@ -34,8 +34,8 @@ const formatScore = (score: number, top: number, bottom: number) => {
 
 export const createDisplay = (props: DisplayProps) => {
     const body = [
-        ['Last count', props.lastCount, props.lastCountMemberId, props.lastCountTimestamp],
-        ['Highest count', props.highestCount, props.highestCountMemberId, props.highestCountTimestamp],
+        ['Last Count', props.lastCount, props.lastCountMemberId, props.lastCountTimestamp],
+        ['Highest Count', props.highestCount, props.highestCountMemberId, props.highestCountTimestamp],
     ] as const;
 
     const scoreValid = props.scoreValid ?? 0;
