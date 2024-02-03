@@ -83,6 +83,12 @@ const gamerules = {
         type: TextChannel,
         field: 'countingChannel',
     },
+    meow_reactions: {
+        title: 'Meow Reactions',
+        description: 'If the bot should react to meows',
+        type: Boolean,
+        field: 'meowReactions',
+    },
 } as const;
 
 const data = new SlashCommandBuilder()

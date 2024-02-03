@@ -25,6 +25,7 @@ model Guild {
     countingChannel     String?
     allowDoubleCounting Boolean @default(false)
     graceMilliseconds   Int     @default(750)
+    meowReactions       Boolean @default(false)
 }
 
 model User {
