@@ -7,6 +7,10 @@ const meows = [
         regex: /(m+(e+|r+)o+w+)|(n+y+a+)|(m+r+p+)/,
         reactions: ['🐱'],
     },
+    {
+        regex: /(m+e+e+p)/,
+        reactions: ['<:illness:1185052052020281416>', '<:imo:1185052054054522910>']
+    }
 ];
 
 client.on(Events.MessageCreate, async (message) => {
@@ -18,7 +22,15 @@ client.on(Events.MessageCreate, async (message) => {
         if (!data?.meowReactions) return;
     }
 
-    for (const reaction in meows[meow].reactions) {
+    for (const reaction of meows[meow].reactions) {
         await message.react(reaction);
+    }
+
+    if (meow === 1) {
+        const illnessImo = client.guilds.cache.get("873048649163239484")?.stickers.cache.find(sticker => sticker.name === "illness imo");
+
+        if (!illnessImo) return;
+
+        message.reply({ stickers: [illnessImo] });
     }
 });
