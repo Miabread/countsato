@@ -9,7 +9,7 @@ const meows = [
     },
     {
         regex: /(m+e+e+p)/,
-        reactions: ['<:illness:1185052052020281416>', '<:imo:1185052054054522910>']
+        reactions: []
     }
 ];
 
