@@ -78,6 +78,12 @@ commands.push({
                 .addUserOption((option) => option.setName('member').setDescription('The member to view')),
         )
         .addSubcommand((sub) => sub.setName('server').setDescription('View the stats of this server'))
+        .addSubcommand((sub) =>
+            sub
+                .setName('user')
+                .setDescription('View the global stats of a user')
+                .addUserOption((option) => option.setName('user').setDescription('The user to view')),
+        )
         .setDMPermission(false),
 
     async execute(interaction) {
@@ -137,6 +143,46 @@ commands.push({
             embed.setFooter({
                 text: interaction.guild.name,
                 iconURL: interaction.guild.iconURL() ?? undefined,
+            });
+            await interaction.reply({ embeds: [embed] });
+        } else if (interaction.options.getSubcommand() === 'user') {
+            const user = interaction.options.getUser('user', false) ?? interaction.user;
+
+            const embed = new EmbedBuilder().setTitle(user.displayName).setThumbnail(user.avatarURL());
+
+            const lastCount = await prisma.member.findFirst({
+                where: { userId: user.id },
+                orderBy: { highestCount: 'desc' },
+                select: { highestCount: true, highestCountTimestamp: true },
+                take: 1,
+            });
+
+            const highestCount = await prisma.member.findFirst({
+                where: { userId: user.id },
+                orderBy: { lastCountTimestamp: 'desc' },
+                select: { lastCount: true, lastCountTimestamp: true },
+                take: 1,
+            });
+
+            if (!lastCount || !highestCount) {
+                embed.setDescription(user.bot ? "Computers can't do math, silly." : "This user hasn't counted yet.");
+                await interaction.reply({ embeds: [embed] });
+                return;
+            }
+
+            const scores = await prisma.member.aggregate({
+                where: { userId: user.id },
+                _sum: {
+                    scoreValid: true,
+                    scoreHighest: true,
+                    scoreGraced: true,
+                    scoreInvalid: true,
+                },
+            });
+
+            createDisplay(embed, { ...lastCount, ...highestCount, ...scores._sum });
+            embed.setFooter({
+                text: 'Global',
             });
             await interaction.reply({ embeds: [embed] });
         }
