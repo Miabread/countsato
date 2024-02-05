@@ -1,36 +1,30 @@
-import { Events } from 'discord.js';
+import { Events, Sticker } from 'discord.js';
 import { client } from '..';
 import { prisma } from '../util';
 
-const meows = [
-    {
-        regex: /(m+(e+|r+)o+w+)|(n+y+a+)|(m+r+p+)/,
-        reactions: ['🐱'],
-    },
-    {
-        regex: /(m+e+e+p)/,
-        reactions: []
-    }
-];
+const meowRegex = /(m+(e+|r+)o+w+)|(n+y+a+)|(m+r+p+)/;
 
 client.on(Events.MessageCreate, async (message) => {
-    const meow = meows.findIndex((meow) => meow.regex.test(message.content));
-    if (meow === -1) return;
+    if (!meowRegex.test(message.content)) return;
 
     if (message.inGuild()) {
         const data = await prisma.guild.findUnique({ where: { id: message.guildId } });
         if (!data?.meowReactions) return;
     }
 
-    for (const reaction of meows[meow].reactions) {
-        await message.react(reaction);
-    }
+    await message.react('🐱');
+});
 
-    if (meow === 1) {
-        const illnessImo = client.guilds.cache.get("873048649163239484")?.stickers.cache.find(sticker => sticker.name === "illness imo");
+const meepRegex = /(m+e+e+p)/;
 
-        if (!illnessImo) return;
+client.on(Events.ClientReady, () => {
+    const guild = '873048649163239484';
+    const sticker = client.guilds.cache.get(guild)?.stickers.cache.find((sticker) => sticker.name === 'illness imo');
+    if (!sticker) return;
 
-        message.reply({ stickers: [illnessImo] });
-    }
+    client.on(Events.MessageCreate, async (message) => {
+        if (message.guildId !== guild) return;
+        if (!meepRegex.test(message.content)) return;
+        await message.reply({ stickers: [sticker] });
+    });
 });
