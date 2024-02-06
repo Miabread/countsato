@@ -26,7 +26,7 @@ client.on(Events.MessageCreate, async (message) => {
         await message.react(reaction);
     }
 
-    if (meow === 1) {
+    if (meow === 1 && message.guildId == "873048649163239484") {
         const illnessImo = client.guilds.cache.get("873048649163239484")?.stickers.cache.find(sticker => sticker.name === "illness imo");
 
         if (!illnessImo) return;
