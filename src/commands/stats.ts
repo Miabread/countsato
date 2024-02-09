@@ -41,7 +41,8 @@ export const createDisplay = (embed: EmbedBuilder, props: DisplayProps) => {
     const scoreGraced = props.scoreGraced ?? 0;
     const scoreInvalid = props.scoreInvalid ?? 0;
 
-    const breakdownTotal = scoreValid + scoreHighest + scoreGraced + scoreInvalid;
+    // Don't include scoreHighest in this, because scoreValid already considers those
+    const breakdownTotal = scoreValid + scoreGraced + scoreInvalid;
 
     const header = ['Total Score', formatScore(scoreValid - scoreInvalid, scoreValid, scoreValid + scoreInvalid)];
     const rows = [
@@ -122,7 +123,11 @@ commands.push({
             const embed = new EmbedBuilder()
                 .setTitle(member?.nickname ?? user.displayName)
                 .setThumbnail(member?.avatarURL() ?? user.avatarURL())
-                .setColor(member?.displayColor ?? null);
+                .setColor(member?.displayColor ?? user.accentColor ?? null)
+                .setFooter({
+                    text: interaction.guild.name,
+                    iconURL: interaction.guild.iconURL() ?? undefined,
+                });
 
             const data = await prisma.member.findUnique({
                 where: {
@@ -140,15 +145,18 @@ commands.push({
             }
 
             createDisplay(embed, { ...data });
-            embed.setFooter({
-                text: interaction.guild.name,
-                iconURL: interaction.guild.iconURL() ?? undefined,
-            });
             await interaction.reply({ embeds: [embed] });
         } else if (interaction.options.getSubcommand() === 'user') {
             const user = interaction.options.getUser('user', false) ?? interaction.user;
 
-            const embed = new EmbedBuilder().setTitle(user.displayName).setThumbnail(user.avatarURL());
+            const embed = new EmbedBuilder()
+                .setTitle(user.displayName)
+                .setThumbnail(user.avatarURL())
+                .setColor(user.accentColor ?? null)
+                .setFooter({
+                    text: 'Global',
+                    iconURL: 'https://cdn.discordapp.com/embed/avatars/0.png',
+                });
 
             const lastCount = await prisma.member.findFirst({
                 where: { userId: user.id },
@@ -181,9 +189,6 @@ commands.push({
             });
 
             createDisplay(embed, { ...lastCount, ...highestCount, ...scores._sum });
-            embed.setFooter({
-                text: 'Global',
-            });
             await interaction.reply({ embeds: [embed] });
         }
     },
