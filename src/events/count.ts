@@ -98,12 +98,9 @@ client.on(Events.MessageCreate, async (message) => {
         await updateCount(0, null);
         await updateScore('invalid');
 
-        const embed = new EmbedBuilder()
-            .setTitle(reason)
-            .setDescription(`${userMention(message.author.id)} ruined the count at **${guild.lastCount}**`)
-            .setColor('Red')
-            .setThumbnail(message.author.avatarURL());
-        await message.reply({ embeds: [embed] });
+        await message.reply(
+            `**${reason}** ${userMention(message.author.id)} ruined the count at **${guild.lastCount}**`,
+        );
     };
 
     if (!guild.allowDoubleCounting && message.author.id === guild.lastCountMemberId) {
