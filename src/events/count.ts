@@ -1,4 +1,4 @@
-import { Events } from 'discord.js';
+import { EmbedBuilder, Events, PermissionFlagsBits, userMention } from 'discord.js';
 import { client } from '..';
 import { prisma } from '../util';
 
@@ -30,6 +30,16 @@ export const scoreTypes = {
 client.on(Events.MessageCreate, async (message) => {
     if (message.author.bot || !message.inGuild()) return;
     if (!numberRegex.test(message.content)) return;
+
+    const hasPerms = message.channel
+        .permissionsFor(message.guild.members.me!)
+        .has([
+            PermissionFlagsBits.AddReactions,
+            PermissionFlagsBits.SendMessages,
+            PermissionFlagsBits.ViewChannel,
+            PermissionFlagsBits.EmbedLinks,
+        ]);
+    if (!hasPerms) return;
 
     const guild = await prisma.guild.findUnique({ where: { id: message.guildId } });
     if (message.channelId !== guild?.countingChannel) return;
@@ -85,9 +95,15 @@ client.on(Events.MessageCreate, async (message) => {
             return;
         }
 
-        updateCount(0, null);
-        await message.channel.send(`**${reason}** Count ruined at **${guild.lastCount}**!`);
+        await updateCount(0, null);
         await updateScore('invalid');
+
+        const embed = new EmbedBuilder()
+            .setTitle(reason)
+            .setDescription(`${userMention(message.author.id)} ruined the count at **${guild.lastCount}**`)
+            .setColor('Red')
+            .setThumbnail(message.author.avatarURL());
+        await message.reply({ embeds: [embed] });
     };
 
     if (!guild.allowDoubleCounting && message.author.id === guild.lastCountMemberId) {
