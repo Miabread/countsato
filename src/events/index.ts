@@ -1,3 +1,3 @@
-import './count';
-import './meow';
-import './commands';
+import "./count.ts";
+import "./meow.ts";
+import "./commands.ts";

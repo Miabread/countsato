@@ -9,7 +9,6 @@
     "deploy": "deno run src/deploy.ts"
   },
   "devDependencies": {
-    "@types/bun": "latest",
     "prisma": "^5.9.0"
   },
   "peerDependencies": {
