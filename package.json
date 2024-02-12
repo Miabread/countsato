@@ -1,23 +1,23 @@
 {
-    "name": "countsato",
-    "module": "src/index.ts",
-    "type": "module",
-    "version": "1.0",
-    "private": "true",
-    "scripts": {
-        "dev": "bun run src/index.ts",
-        "deploy": "bun run src/deploy.ts"
-    },
-    "devDependencies": {
-        "@types/bun": "latest",
-        "prisma": "^5.9.0"
-    },
-    "peerDependencies": {
-        "typescript": "^5.0.0"
-    },
-    "dependencies": {
-        "@prisma/client": "^5.9.0",
-        "discord.js": "^14.14.1",
-        "typescript": "^5.0.0"
-    }
+  "name": "countsato",
+  "module": "src/index.ts",
+  "type": "module",
+  "version": "1.0.0",
+  "private": "true",
+  "scripts": {
+    "dev": "deno run src/index.ts",
+    "deploy": "deno run src/deploy.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "prisma": "^5.9.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.9.0",
+    "discord.js": "^14.14.1",
+    "typescript": "^5.0.0"
+  }
 }
