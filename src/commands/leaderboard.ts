@@ -44,20 +44,16 @@ const boardTypes = {
 
 const backButtonId = 'back';
 const nextButtonId = 'next';
-const buttonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder().setCustomId(backButtonId).setLabel('<').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId(nextButtonId).setLabel('>').setStyle(ButtonStyle.Secondary),
+const pageRow = new ActionRowBuilder<ButtonBuilder>().setComponents(
+    new ButtonBuilder().setCustomId(backButtonId).setLabel('<').setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId(nextButtonId).setLabel('>').setStyle(ButtonStyle.Primary),
 );
-const selectMenuId = 'board';
-const selectMenu = new StringSelectMenuBuilder()
-    .setCustomId('board')
-    .setOptions(
-        ...Object.entries(boardTypes).map(([id, data]) =>
-            new StringSelectMenuOptionBuilder().setLabel(data.label).setValue(id),
-        ),
-    );
-const selectRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
-const components = [buttonRow, selectRow];
+const boardTypeRow = new ActionRowBuilder<ButtonBuilder>().setComponents(
+    Object.entries(boardTypes).map(([id, data]) =>
+        new ButtonBuilder().setCustomId(id).setLabel(data.label.split(' ')[0]).setStyle(ButtonStyle.Secondary),
+    ),
+);
+const components = [pageRow, boardTypeRow];
 
 commands.push({
     data: new SlashCommandBuilder().setName('leaderboard').setDescription('View the top members in this server'),
@@ -80,54 +76,55 @@ commands.push({
 
         const updatePageDisplay = async () => {
             const currentOffset = currentPage * itemsPerPage;
-            const key = boardTypes[currentBoardType].databaseKey;
+            const boardType = boardTypes[currentBoardType];
 
             const data = await prisma.member.findMany({
                 where: { guildId: interaction.guildId },
-                select: { userId: true, [key]: true },
-                orderBy: { [key]: 'desc' },
+                select: { userId: true, [boardType.databaseKey]: true },
+                orderBy: { [boardType.databaseKey]: 'desc' },
                 skip: currentOffset,
                 take: itemsPerPage,
             });
 
-            const display = data
-                .map((member, index) => `#${index + currentOffset + 1} ${userMention(member.userId)} (${member[key]})`)
-                .join('\n');
+            const display = data.map((member, index) => {
+                const ranking = index + currentOffset + 1;
+                const value = member[boardType.databaseKey];
+                return `#${ranking} ${userMention(member.userId)} (${value})`;
+            });
 
-            embed.setTitle(boardTypes[currentBoardType].label);
-            embed.setColor(boardTypes[currentBoardType].color);
-            embed.setDescription(display);
-            embed.setFooter({ text: `Page ${currentPage + 1} / ${maxPages}` });
+            embed
+                .setTitle(boardType.label)
+                .setColor(boardType.color)
+                .setDescription(display.join('\n'))
+                .setFooter({ text: `Page ${currentPage + 1} / ${maxPages}` });
+            return [embed];
         };
 
-        await updatePageDisplay();
         const response = await interaction.reply({
-            embeds: [embed],
+            embeds: await updatePageDisplay(),
             components,
         });
 
-        const buttonCollector = response.createMessageComponentCollector({
+        const collector = response.createMessageComponentCollector({
             filter: (i) => i.user.id === interaction.user.id,
             time: 60_000,
         });
 
-        buttonCollector.on('collect', async (i) => {
+        collector.on('collect', async (i) => {
             if (i.customId === backButtonId) {
                 currentPage -= 1;
                 if (currentPage < 0) currentPage = maxPages - 1;
             } else if (i.customId === nextButtonId) {
                 currentPage += 1;
                 if (currentPage >= maxPages) currentPage = 0;
-            } else if (i.customId === selectMenuId) {
-                if (!i.isStringSelectMenu()) throw new Error('string select menu');
-                currentBoardType = i.values[0] as keyof typeof boardTypes;
+            } else if (Object.hasOwn(boardTypes, i.customId)) {
+                currentBoardType = i.customId as keyof typeof boardTypes;
             }
 
-            await updatePageDisplay();
-            i.update({ embeds: [embed] });
+            i.update({ embeds: await updatePageDisplay() });
         });
 
-        buttonCollector.on('end', () => {
+        collector.on('end', () => {
             interaction.editReply({ components: [] });
         });
     },
