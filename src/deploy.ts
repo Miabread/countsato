@@ -16,6 +16,8 @@ if (!route) throw new Error('Subcommand must be `global` or `guild`');
 
 const rest = new REST().setToken(process.env.DISCORD_TOKEN ?? '');
 
+console.log(`Deploying ${commands.length} commands`);
+
 await rest.put(route as any, {
     body: commands.map((command) => command.data.toJSON()),
 });
