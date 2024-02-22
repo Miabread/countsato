@@ -14,7 +14,7 @@ import { prisma } from '../util';
 
 const itemsPerPage = 10;
 
-const boardTypes = {
+const categories = {
     valid: {
         label: '✅ Counts',
         databaseKey: 'scoreValid',
@@ -44,19 +44,27 @@ const boardTypes = {
 
 const backButtonId = 'back';
 const nextButtonId = 'next';
-const pageRow = new ActionRowBuilder<ButtonBuilder>().setComponents(
+const paginationRow = new ActionRowBuilder<ButtonBuilder>().setComponents(
     new ButtonBuilder().setCustomId(backButtonId).setLabel('<').setStyle(ButtonStyle.Primary),
     new ButtonBuilder().setCustomId(nextButtonId).setLabel('>').setStyle(ButtonStyle.Primary),
 );
-const boardTypeRow = new ActionRowBuilder<ButtonBuilder>().setComponents(
-    Object.entries(boardTypes).map(([id, data]) =>
+const categoryRow = new ActionRowBuilder<ButtonBuilder>().setComponents(
+    Object.entries(categories).map(([id, data]) =>
         new ButtonBuilder().setCustomId(id).setLabel(data.label.split(' ')[0]).setStyle(ButtonStyle.Secondary),
     ),
 );
-const components = [pageRow, boardTypeRow];
+const components = [paginationRow, categoryRow];
 
 commands.push({
-    data: new SlashCommandBuilder().setName('leaderboard').setDescription('View the top members in this server'),
+    data: new SlashCommandBuilder()
+        .setName('leaderboard')
+        .setDescription('View the top members in this server')
+        .addStringOption((option) =>
+            option
+                .setName('category')
+                .setDescription('Select which leaderboard to view')
+                .setChoices(...Object.entries(categories).map(([value, data]) => ({ name: data.label, value }))),
+        ),
 
     async execute(interaction) {
         if (!interaction.inCachedGuild()) throw new Error('guild');
@@ -72,29 +80,29 @@ commands.push({
         }
 
         let currentPage = 0;
-        let currentBoardType: keyof typeof boardTypes = 'valid';
+        let currentCategory = (interaction.options.getString('category', false) as keyof typeof categories) ?? 'valid';
 
         const updatePageDisplay = async () => {
             const currentOffset = currentPage * itemsPerPage;
-            const boardType = boardTypes[currentBoardType];
+            const category = categories[currentCategory];
 
             const data = await prisma.member.findMany({
                 where: { guildId: interaction.guildId },
-                select: { userId: true, [boardType.databaseKey]: true },
-                orderBy: { [boardType.databaseKey]: 'desc' },
+                select: { userId: true, [category.databaseKey]: true },
+                orderBy: { [category.databaseKey]: 'desc' },
                 skip: currentOffset,
                 take: itemsPerPage,
             });
 
             const display = data.map((member, index) => {
                 const ranking = index + currentOffset + 1;
-                const value = member[boardType.databaseKey];
+                const value = member[category.databaseKey];
                 return `#${ranking} ${userMention(member.userId)} (${value})`;
             });
 
             embed
-                .setTitle(boardType.label)
-                .setColor(boardType.color)
+                .setTitle(category.label)
+                .setColor(category.color)
                 .setDescription(display.join('\n'))
                 .setFooter({ text: `Page ${currentPage + 1} / ${maxPages}` });
             return [embed];
@@ -117,8 +125,8 @@ commands.push({
             } else if (i.customId === nextButtonId) {
                 currentPage += 1;
                 if (currentPage >= maxPages) currentPage = 0;
-            } else if (Object.hasOwn(boardTypes, i.customId)) {
-                currentBoardType = i.customId as keyof typeof boardTypes;
+            } else if (Object.hasOwn(categories, i.customId)) {
+                currentCategory = i.customId as keyof typeof categories;
             }
 
             i.update({ embeds: await updatePageDisplay() });
