@@ -7,4 +7,10 @@ interface Command {
 
 export const commands: Command[] = [];
 
-await Promise.all([import('./stats'), import('./gamerule'), import('./ping'), import('./leaderboard')]);
+await Promise.all([
+    import('./stats'),
+    import('./gamerule'),
+    import('./ping'),
+    import('./leaderboard'),
+    import('./roll'),
+]);
