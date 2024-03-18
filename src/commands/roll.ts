@@ -75,22 +75,16 @@ commands.push({
             interaction.inCachedGuild() ? interaction.member.displayColor : interaction.user.accentColor ?? null,
         );
 
+        const rendered = results.map((roll) => {
+            const split = renderer.render(roll).split('=');
+            const value = split.pop()!.trim();
+            const tray = split.join('=').trim();
+            return { tray, value };
+        });
+
         if (results.length === 1) {
-            const [tray, value] = renderer
-                .render(results[0])
-                .split('=')
-                .map((it) => it.trim());
-
-            embed.setTitle(`${expression} (${tray})  =  ${inlineCode(value)}`);
+            embed.setTitle(`${expression} (${rendered[0].tray})  =  ${inlineCode(rendered[0].value)}`);
         } else {
-            const rendered = results.map((roll) => {
-                const [tray, value] = renderer
-                    .render(roll)
-                    .split('=')
-                    .map((it) => it.trim());
-                return { tray, value };
-            });
-
             const padding = rendered.reduce((acc, { value }) => Math.max(acc, value.length), 0);
 
             const content = rendered
