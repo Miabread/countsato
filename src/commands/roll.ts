@@ -1,10 +1,11 @@
-import { Colors, EmbedBuilder, SlashCommandBuilder, codeBlock, inlineCode } from 'discord.js';
+import { Colors, EmbedBuilder, SlashCommandBuilder, bold, codeBlock, inlineCode } from 'discord.js';
 import { commands } from '.';
-import { DiceRoller } from 'dice-roller-parser';
+import { DiceRoller, DiscordRollRenderer } from 'dice-roller-parser';
 import { inspect } from 'bun';
 import { useTry } from '../util';
 
 const roller = new DiceRoller();
+const renderer = new DiscordRollRenderer();
 
 commands.push({
     data: new SlashCommandBuilder()
@@ -73,21 +74,33 @@ commands.push({
         const embed = new EmbedBuilder().setColor(
             interaction.inCachedGuild() ? interaction.member.displayColor : interaction.user.accentColor ?? null,
         );
+
         if (results.length === 1) {
-            embed.setTitle(`${inlineCode(expression)}   =   ${results[0].value}`);
+            const [tray, value] = renderer
+                .render(results[0])
+                .split('=')
+                .map((it) => it.trim());
+
+            embed.setTitle(`${expression} (${tray})  =  ${inlineCode(value)}`);
         } else {
-            embed.setTitle(`${inlineCode(expression)}   (${results.length} Iterations)`).setFields(
-                {
-                    name: 'Total',
-                    value: results.map((_, i) => `#${i + 1}`).join('\n'),
-                    inline: true,
-                },
-                {
-                    name: `${results.reduce((acc, roll) => acc + roll.value, 0)}`,
-                    value: results.map((roll) => `**${roll.value}**`).join('\n'),
-                    inline: true,
-                },
-            );
+            const rendered = results.map((roll) => {
+                const [tray, value] = renderer
+                    .render(roll)
+                    .split('=')
+                    .map((it) => it.trim());
+                return { tray, value };
+            });
+
+            const padding = rendered.reduce((acc, { value }) => Math.max(acc, value.length), 0);
+
+            const content = rendered
+                .map((roll) => {
+                    const value = inlineCode(roll.value.padStart(padding, '0'));
+                    return `${value}  »  ${roll.tray}`;
+                })
+                .join('\n');
+
+            embed.setTitle(`${expression} (${results.length} Iterations)`).setDescription(content);
         }
 
         await interaction.reply({ embeds: [embed], ephemeral });
