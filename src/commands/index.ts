@@ -1,6 +1,7 @@
 import { SlashCommandBuilder, type ChatInputCommandInteraction } from 'discord.js';
 
 interface Command {
+    private?: boolean;
     data: Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>;
     execute(interaction: ChatInputCommandInteraction): Promise<unknown>;
 }
@@ -13,4 +14,5 @@ await Promise.all([
     import('./ping'),
     import('./leaderboard'),
     import('./roll'),
+    import('./dev'),
 ]);
