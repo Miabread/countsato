@@ -6,12 +6,24 @@ const commandMap = new Collection(
   commands.map((command) => [command.data.name, command]),
 );
 
+const devIds = (process.env.DEV_IDS ?? "").split(",");
+
+const errorReply = { content: "Error while running command", ephemeral: true };
+
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
   const command = commandMap.get(interaction.commandName);
+
   if (!command) {
-    return console.error(`No command ${interaction.commandName} found`);
+    console.error(`No command ${interaction.commandName} found`);
+    await interaction.reply(errorReply);
+    return;
+  }
+
+  if (command.private && !devIds.includes(interaction.user.id)) {
+    await interaction.reply(errorReply);
+    return;
   }
 
   try {
@@ -19,9 +31,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
   } catch (error) {
     console.error(error);
 
-    const message = { content: "Error while running command", ephemeral: true };
     if (interaction.replied || interaction.deferred) {
-      interaction.followUp(message);
-    } else interaction.reply(message);
+      await interaction.followUp(errorReply);
+    } else {
+      await interaction.reply(errorReply);
+    }
   }
 });

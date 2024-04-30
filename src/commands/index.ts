@@ -4,14 +4,18 @@ import {
 } from "discord.js";
 
 interface Command {
+  private?: boolean;
   data: Omit<SlashCommandBuilder, "addSubcommand" | "addSubcommandGroup">;
   execute(interaction: ChatInputCommandInteraction): Promise<unknown>;
 }
 
-await Promise.all([
-  import("./stats.ts"),
-  import("./gamerule.ts"),
-  import("./ping.ts"),
-]);
-
 export const commands: Command[] = [];
+
+await Promise.all([
+  import("./stats"),
+  import("./gamerule"),
+  import("./ping"),
+  import("./leaderboard"),
+  import("./roll"),
+  import("./dev"),
+]);
