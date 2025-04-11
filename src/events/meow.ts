@@ -15,6 +15,19 @@ client.on(Events.MessageCreate, async (message) => {
     await message.react('🐱');
 });
 
+const woofRegex = /(w+o+o+f+)|(a+r+f+)|(b+a+r+k+)|(r+u+f+f+)/;
+
+client.on(Events.MessageCreate, async (message) => {
+    if (!woofRegex.test(message.content)) return;
+
+    if (message.inGuild()) {
+        const data = await prisma.guild.findUnique({ where: { id: message.guildId } });
+        if (!data?.meowReactions) return;
+    }
+
+    await message.react('🐶');
+});
+
 const meepRegex = /(m+e+e+p)/;
 
 client.on(Events.ClientReady, () => {
